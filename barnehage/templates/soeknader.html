@@ -6,7 +6,8 @@
 <table border="1">
     <thead>
         <tr>
-            <th>Navn - Forelder</th>
+            <th>Navn - Forelder 1</th>
+            <th>Navn - Forelder 2</th>
             <th>Navn - Barn</th>
             <th>Fortrinnsrett</th>
             <th>Status</th>
@@ -15,8 +16,9 @@
     <tbody>
         {% for soknad in soknader %}
         <tr>
-            <td>{{ soknad.navn_forelder_1 }}</td>
-            <td>{{ soknad.navn_barn }}</td>
+            <td>{{ soknad.foresatt_navn_1 }}</td> <!-- Navn til forelder 1 -->
+            <td>{{ soknad.foresatt_navn_2 }}</td> <!-- Navn til forelder 2, hvis det finnes -->
+            <td>{{ soknad.barn_navn }}</td> <!-- Navn til barnet -->
             <td>
                 {% if soknad.fortrinnsrett %}
                     Ja

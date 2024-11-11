@@ -1,7 +1,8 @@
 from flask import Flask, url_for, render_template, request, redirect, session
+import pandas as pd  # Legger til pandas for å lese fra Excel
+
 from kgcontroller import (form_to_object_soknad, insert_soknad, commit_all, select_alle_barnehager, select_alle_soknader)
 
-# Definerer Flask-applikasjonen med riktig '_name_' variabel
 app = Flask(__name__)
 app.secret_key = 'BAD_SECRET_KEY'  # nødvendig for session
 
@@ -62,13 +63,24 @@ def svar():
 
 @app.route('/commit')
 def commit():
-    # Skriver alle endringer til Excel-filen
+    # Skriver alle endringer til Excel-filen for å sikre at dataene er lagret
     commit_all()
-    
-    # Henter alle søknader for å vise dem etter at de er lagret
-    alle_soknader = select_alle_soknader()
-    
-    return render_template('commit.html', soknader=alle_soknader)
+
+    # Leser alle data fra kgdata.xlsx
+    data_path = 'kgdata.xlsx'  # Sørg for at denne er riktig plassert og tilgjengelig
+    try:
+        foresatte_df = pd.read_excel(data_path, sheet_name='foresatt')
+        barn_df = pd.read_excel(data_path, sheet_name='barn')
+        soknad_df = pd.read_excel(data_path, sheet_name='soknad')
+    except FileNotFoundError:
+        return "Feil: Excel-filen 'kgdata.xlsx' ble ikke funnet."
+    except Exception as e:
+        return f"Feil ved lesing av Excel-filen: {e}"
+
+    # Sender dataene til commit.html for visning
+    return render_template('commit.html', foresatte=foresatte_df.to_dict(orient='records'),
+                           barn=barn_df.to_dict(orient='records'),
+                           soknader=soknad_df.to_dict(orient='records'))
 
 @app.route('/soeknader')
 def soeknader():
@@ -89,6 +101,5 @@ def soeknader():
     # Viser alle søknader i soeknader.html
     return render_template('soeknader.html', soknader=alle_soknader)
 
-# Start Flask-serveren hvis dette skriptet kjøres direkte
 if __name__ == "__main__":
     app.run(debug=False)

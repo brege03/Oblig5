@@ -3,13 +3,13 @@ import pandas as pd
 from kgmodel import Barnehage
 
 def initiate_db(db_name):
-    kg1 = Barnehage(1,"Sunshine Preschool",50,15)
-    kg2 = Barnehage(2,"Happy Days Nursery",25,2)
-    kg3 = Barnehage(3,"123 Learning Center",35,4)
-    kg4 = Barnehage(4,"ABC Kindergarten",12,0)
-    kg5 = Barnehage(5,"Tiny Tots Academy",15,5)
-    kg6 = Barnehage(6,"Giggles and Grins Childcare",10,0)
-    kg7 = Barnehage(7,"Playful Pals Daycare",40,6)
+    kg1 = Barnehage(1,"Riflegata Barnehage",50,15)
+    kg2 = Barnehage(2,"Sinsen Barnehage",25,2)
+    kg3 = Barnehage(3,"Espira Gartnerløkka Barnehage",35,4)
+    kg4 = Barnehage(4,"Seilduken Barnehage",12,0)
+    kg5 = Barnehage(5,"Petersborg Barnehage",15,5)
+    kg6 = Barnehage(6,"Hovin Barnehage",10,0)
+    kg7 = Barnehage(7,"Brobekk Barnehage",40,6)
     
     barnehage_liste = [kg1, kg2, kg3, kg4, kg5, kg6, kg7]
     
@@ -24,6 +24,7 @@ def initiate_db(db_name):
                           'barnehage_antall_plasser',
                           'barnehage_ledige_plasser']
     kolonner_barn = ['barn_id',
+                     'barn_navn',
                      'barn_pnr']
     kolonner_soknad = ['sok_id',
                        'foresatt_1',
@@ -50,12 +51,10 @@ def initiate_db(db_name):
         barn.to_excel(writer, sheet_name='barn')
         soknad.to_excel(writer, sheet_name='soknad')
     
-    """
-    b1 = Barn(1, "09012356472")
+
+"""
+b1 = Barn(1, "09012356472")
     f1 = Foresatt(1, "Ole Nordmann", "Bekkeveien 100", "98434344", "09079089332")
     f2 = Foresatt(2, "Solveig Imsdal", "Bekkeveien 100", "98434312", "09079233221")
-    """
-
-initiate_db("kgdata.xlsx")
-
+"""
 
