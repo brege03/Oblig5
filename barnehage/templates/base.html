@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <title>{% block title %} {% endblock %} - OBLIG5</title>
     <style>
-    
         body {
-          margin-left: 20px;
-          margin-right: 20px;
+            margin-left: 20px;
+            margin-right: 20px;
         }
         a:link { color: #0000EE; }
         a:visited { color: #551A8B; }
@@ -17,15 +16,6 @@
             margin: 5px;
             width: 100%;
         }
-        /*
-        .content {
-            margin: 5px;
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-        }
-        */
 
         button,
         input,
@@ -56,7 +46,6 @@
             right: 0;
         }
 
-
         .title a {
             color: #0000EE;
             text-decoration: none;
@@ -67,25 +56,23 @@
             font-size: 1em;
             margin-left: 30px;
             margin-right: 20px;
-            
-        }
-        
-        .center {
-          display: block;
-          margin-left: auto;
-          margin-right: auto;
-          width: 50%;
         }
 
+        .center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
     </style>
 </head>
 <body>
-    
     <nav>
         <span>MENY:</span>
         <a href="{{ url_for('index') }}">Hjem</a>
         <a href="{{ url_for('behandle') }}">Søk</a>
         <a href="{{ url_for('barnehager') }}">Barnehager</a>
+        <a href="{{ url_for('soeknader') }}">Søknader</a> <!-- Nytt meny-element for søknader -->
 
         <a href="{{ url_for('commit') }}" style="float: right;"> commit</a>
         <span style="float: right">ADMIN:</span>
@@ -96,4 +83,3 @@
     </div>
 </body>
 </html>
-

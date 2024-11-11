@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Alle Data i Databasen</h1>
+<h1>Oversikt over Alle Søknader</h1>
 
 <table border="1">
     <thead>
         <tr>
-            <th>Navn - Forelder 1</th>
+            <th>Navn - Forelder</th>
             <th>Navn - Barn</th>
-            <th>Adresse</th>
+            <th>Fortrinnsrett</th>
             <th>Status</th>
         </tr>
     </thead>
@@ -17,12 +17,18 @@
         <tr>
             <td>{{ soknad.navn_forelder_1 }}</td>
             <td>{{ soknad.navn_barn }}</td>
-            <td>{{ soknad.adresse_forelder_1 }}</td>
+            <td>
+                {% if soknad.fortrinnsrett %}
+                    Ja
+                {% else %}
+                    Nei
+                {% endif %}
+            </td>
             <td>{{ soknad.status }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
-<a href="{{ url_for('index') }}">Tilbake til forsiden</a>
+<a href="/">Tilbake til hovedsiden</a>
 {% endblock %}
