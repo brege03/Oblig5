@@ -16,16 +16,10 @@
     <tbody>
         {% for soknad in soknader %}
         <tr>
-            <td>{{ soknad.foresatt_navn_1 }}</td> <!-- Navn til forelder 1 -->
-            <td>{{ soknad.foresatt_navn_2 }}</td> <!-- Navn til forelder 2, hvis det finnes -->
-            <td>{{ soknad.barn_navn }}</td> <!-- Navn til barnet -->
-            <td>
-                {% if soknad.fortrinnsrett %}
-                    Ja
-                {% else %}
-                    Nei
-                {% endif %}
-            </td>
+            <td>{{ soknad.navn_forelder_1 }}</td>
+            <td>{{ soknad.navn_forelder_2 or 'Ikke oppgitt' }}</td>
+            <td>{{ soknad.navn_barn }}</td>
+            <td>{{ 'Ja' if soknad.fortrinnsrett else 'Nei' }}</td>
             <td>{{ soknad.status }}</td>
         </tr>
         {% endfor %}

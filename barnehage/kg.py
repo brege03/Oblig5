@@ -52,7 +52,6 @@ def svar():
     else:
         return redirect(url_for('index'))
 
-
 @app.route('/commit')
 def commit():
     commit_all()
@@ -72,12 +71,15 @@ def commit():
                            soknader=soknad_df.to_dict(orient='records'))
 
 
+
+
 @app.route('/soeknader')
 def soeknader():
     alle_soknader = select_alle_soknader()
     ledige_plasser = 5
 
     for soknad in alle_soknader:
+        # Assign "TILBUD" or "Fortrinnsrett, venter på ledig plass" based on conditions
         if ledige_plasser > 0:
             soknad.status = "TILBUD"
             ledige_plasser -= 1
@@ -87,7 +89,6 @@ def soeknader():
             soknad.status = "AVSLAG"
 
     return render_template('soeknader.html', soknader=alle_soknader)
-
 
 @app.route('/statistikk', methods=['GET', 'POST'])
 def statistikk():
