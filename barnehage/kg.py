@@ -1,39 +1,34 @@
 from flask import Flask, url_for, render_template, request, redirect, session
-import pandas as pd  # Legger til pandas for å lese fra Excel
+import pandas as pd
+import altair as alt
 
 from kgcontroller import (form_to_object_soknad, insert_soknad, commit_all, select_alle_barnehager, select_alle_soknader)
 
-app = Flask(__name__)
-app.secret_key = 'BAD_SECRET_KEY'  # nødvendig for session
+app = Flask(__name__)  # Corrected to _name_
+app.secret_key = 'BAD_SECRET_KEY'  # necessary for session
+
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/barnehager')
 def barnehager():
-    # Henter informasjon om alle barnehager
     information = select_alle_barnehager()
     return render_template('barnehager.html', data=information)
+
 
 @app.route('/behandle', methods=['GET', 'POST'])
 def behandle():
     if request.method == 'POST':
-        # Henter data fra skjemaet
         sd = request.form
-        print(sd)
-        
-        # Lager en søknad basert på skjemaet
         soknad_objekt = form_to_object_soknad(sd)
-        
-        # Setter inn søknaden i "databasen"
         insert_soknad(soknad_objekt)
-        
-        # Lagre skjemaopplysningene i session for senere bruk
+        commit_all()
         session['information'] = sd
 
-        # Vurderer status basert på antall ledige plasser og fortrinnsrett
-        ledige_plasser = 5  # Dette bør hentes dynamisk fra databasen
+        ledige_plasser = 5
         status = "AVSLAG"
 
         if ledige_plasser > 0:
@@ -43,52 +38,45 @@ def behandle():
               sd.get('fortrinnsrett_sykdome_paa_barnet')):
             status = "Fortrinnsrett, venter på ledig plass"
 
-        # Går videre til svar-siden og gir status
         return render_template('svar.html', data=sd, status=status)
     else:
         return render_template('soknad.html')
 
+
 @app.route('/svar')
 def svar():
     if 'information' in session:
-        # Henter informasjonen fra session
         information = session['information']
-        
-        # Viser informasjonen og gir standard status (dette vil vanligvis allerede være gjort i /behandle)
-        status = "AVSLAG"  # Standardverdi som kan endres basert på ledige plasser
+        status = "AVSLAG"
         return render_template('svar.html', data=information, status=status)
     else:
-        # Hvis det ikke er noen informasjon i session, går tilbake til hovedsiden
         return redirect(url_for('index'))
+
 
 @app.route('/commit')
 def commit():
-    # Skriver alle endringer til Excel-filen for å sikre at dataene er lagret
     commit_all()
-
-    # Leser alle data fra kgdata.xlsx
-    data_path = 'kgdata.xlsx'  # Sørg for at denne er riktig plassert og tilgjengelig
+    data_path = 'kgdata.xlsx'
     try:
-        foresatte_df = pd.read_excel(data_path, sheet_name='foresatt')
-        barn_df = pd.read_excel(data_path, sheet_name='barn')
-        soknad_df = pd.read_excel(data_path, sheet_name='soknad')
+        # Use openpyxl as the engine to read Excel files
+        foresatte_df = pd.read_excel(data_path, sheet_name='foresatt', engine='openpyxl')
+        barn_df = pd.read_excel(data_path, sheet_name='barn', engine='openpyxl')
+        soknad_df = pd.read_excel(data_path, sheet_name='soknad', engine='openpyxl')
     except FileNotFoundError:
         return "Feil: Excel-filen 'kgdata.xlsx' ble ikke funnet."
     except Exception as e:
         return f"Feil ved lesing av Excel-filen: {e}"
 
-    # Sender dataene til commit.html for visning
     return render_template('commit.html', foresatte=foresatte_df.to_dict(orient='records'),
                            barn=barn_df.to_dict(orient='records'),
                            soknader=soknad_df.to_dict(orient='records'))
 
+
 @app.route('/soeknader')
 def soeknader():
-    # Henter alle søknader fra "databasen"
     alle_soknader = select_alle_soknader()
-    ledige_plasser = 5  # Dette bør justeres dynamisk for å reflektere faktisk antall ledige plasser fra databasen
-    
-    # Beregner status for hver søknad basert på ledige plasser og fortrinnsrett
+    ledige_plasser = 5
+
     for soknad in alle_soknader:
         if ledige_plasser > 0:
             soknad.status = "TILBUD"
@@ -98,8 +86,54 @@ def soeknader():
         else:
             soknad.status = "AVSLAG"
 
-    # Viser alle søknader i soeknader.html
     return render_template('soeknader.html', soknader=alle_soknader)
+
+
+@app.route('/statistikk', methods=['GET', 'POST'])
+def statistikk():
+    data_path = 'ssb-barnehager-2015-2023-alder-1-2-aar.xlsm'
+    try:
+        # Use openpyxl engine to read the Excel file
+        df = pd.read_excel(data_path, sheet_name='KOSandel120000', engine='openpyxl')
+        
+        # Clean the data by skipping initial rows without useful data and renaming columns
+        df.columns = df.iloc[2]  # Set the header row to row index 2
+        df = df[3:]  # Skip the first few rows that do not contain actual data
+        df.rename(columns={df.columns[0]: "Kommune"}, inplace=True)
+        df.dropna(axis=1, how='all', inplace=True)  # Drop columns that are entirely NaN
+        
+    except FileNotFoundError:
+        return "Feil: Excel-filen 'ssb-barnehager-2015-2023-alder-1-2-aar.xlsm' ble ikke funnet."
+    except Exception as e:
+        return f"Feil ved lesing av Excel-filen: {e}"
+
+    if request.method == 'POST':
+        valgt_kommune = request.form.get('kommune')
+        df_kommune = df[df['Kommune'] == valgt_kommune]
+
+        try:
+            headers = [str(year) for year in range(2015, 2024) if str(year) in df_kommune.columns]
+            df_kommune_melted = df_kommune.melt(id_vars=['Kommune'], value_vars=headers, var_name='Year', value_name='Percentage')
+
+            chart = alt.Chart(df_kommune_melted).mark_line(point=True).encode(
+                x=alt.X('Year:O', title='Year'),
+                y=alt.Y('Percentage:Q', title='Percentage in Kindergarten'),
+                tooltip=['Year', 'Percentage']
+            ).properties(
+                title=f'Kindergarten Enrollment Percentage for {valgt_kommune} (2015-2023)',
+                width=600,
+                height=400
+            )
+
+            chart_path = f'static/{valgt_kommune}_kindergarten_chart.html'
+            chart.save(chart_path)
+            return render_template('statistikk.html', chart_path=chart_path, kommuner=df['Kommune'].unique())
+        
+        except ValueError as e:
+            return f"Error while creating the chart: {e}"
+
+    return render_template('statistikk.html', kommuner=df['Kommune'].unique())
+
 
 if __name__ == "__main__":
     app.run(debug=False)
